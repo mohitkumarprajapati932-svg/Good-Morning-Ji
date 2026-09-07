@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good Morning</title>
+<meta name="color-scheme" content="only light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light only;
+    --sky-top: #FF9A76;
+    --sky-bottom: #FFD89C;
+    --ink: #2b2333;
+    --paper: #fff8f0;
+    --hill-1: #3a3557;
+    --hill-2: #241f3a;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    height:100%;
+    overflow:hidden;
+  }
+
+  body{
+    font-family:'Space Grotesk', sans-serif;
+    color: var(--paper);
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 65%);
+    transition: background 4s ease;
+    position: relative;
+    min-height: 100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- top bar: time + date ---------- */
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    padding: clamp(16px, 4vw, 36px) clamp(18px, 5vw, 44px);
+    position: relative;
+    z-index: 5;
+  }
+  .clock{
+    font-size: clamp(0.95rem, 2.2vw, 1.15rem);
+    letter-spacing: 0.02em;
+    font-weight: 500;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.25);
+  }
+  .date{
+    font-size: clamp(0.8rem, 1.8vw, 0.95rem);
+    opacity: 0.85;
+    text-align:right;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.25);
+  }
+
+  /* ---------- sky layer (sun/moon, stars, clouds, birds) ---------- */
+  .sky{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    z-index:1;
+  }
+
+  .orb{
+    position:absolute;
+    width: clamp(46px, 9vw, 84px);
+    height: clamp(46px, 9vw, 84px);
+    border-radius:50%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    transition: left 3s linear, top 3s linear, background 3s ease, box-shadow 3s ease;
+  }
+  .orb.sun{
+    background: radial-gradient(circle at 35% 30%, #fff3d6, #ffcf6b 55%, #ffb054 100%);
+    box-shadow: 0 0 70px 18px rgba(255, 200, 110, 0.55);
+  }
+  .orb.moon{
+    background: radial-gradient(circle at 35% 30%, #ffffff, #dfe6f5 55%, #b9c4dd 100%);
+    box-shadow: 0 0 45px 12px rgba(210, 220, 255, 0.35);
+  }
+
+  .stars{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    transition: opacity 3s ease;
+  }
+  .stars.visible{ opacity:1; }
+  .star{
+    position:absolute;
+    width:2px;
+    height:2px;
+    background:#fff;
+    border-radius:50%;
+    animation: twinkle 3.2s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%, 100%{ opacity:0.25; }
+    50%{ opacity:1; }
+  }
+
+  .cloud{
+    position:absolute;
+    opacity:0.8;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.08));
+    animation: drift linear infinite;
+  }
+  .cloud svg{ width:100%; height:100%; display:block; }
+  @keyframes drift{
+    from{ transform: translateX(-15vw); }
+    to{ transform: translateX(115vw); }
+  }
+
+  .bird{
+    position:absolute;
+    width: 22px;
+    height: 12px;
+    opacity: 0.75;
+    animation: fly linear infinite;
+  }
+  .bird svg{ width:100%; height:100%; display:block; }
+  @keyframes fly{
+    from{ transform: translateX(-8vw) translateY(0); }
+    to{ transform: translateX(108vw) translateY(-6vh); }
+  }
+
+  /* ---------- horizon silhouette ---------- */
+  .horizon{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    width:100%;
+    height: 22vh;
+    z-index:2;
+  }
+  .horizon svg{ width:100%; height:100%; display:block; }
+
+  /* ---------- loading screen ---------- */
+  .loader{
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: linear-gradient(180deg, #1B2A4A 0%, #2B2153 100%);
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    gap: 22px;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  .loader.hide{
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loader-sun{
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff3d6, #ffcf6b 55%, #ffb054 100%);
+    box-shadow: 0 0 40px 14px rgba(255,200,110,0.5);
+    animation: loaderRise 2.2s ease-in-out infinite;
+  }
+  @keyframes loaderRise{
+    0%{ transform: translateY(18px) scale(0.85); opacity:0.5; }
+    50%{ transform: translateY(-10px) scale(1.05); opacity:1; }
+    100%{ transform: translateY(18px) scale(0.85); opacity:0.5; }
+  }
+  .loader-text{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    color: var(--paper);
+    opacity: 0.85;
+  }
+
+  /* ---------- main content ---------- */
+  .stage{
+    position:relative;
+    z-index:5;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding: 0 clamp(20px, 8vw, 60px);
+  }
+
+  .vignette{
+    position:absolute;
+    inset:0;
+    z-index:3;
+    background: radial-gradient(ellipse at center, rgba(20,15,35,0.28) 0%, rgba(20,15,35,0) 62%);
+    pointer-events:none;
+  }
+
+  .greeting{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size: clamp(2.6rem, 9vw, 5.2rem);
+    line-height: 1.02;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 3px 24px rgba(0,0,0,0.28);
+  }
+
+  .quote{
+    max-width: 40ch;
+    font-size: clamp(0.92rem, 2.3vw, 1.12rem);
+    font-weight: 400;
+    line-height: 1.7;
+    white-space: pre-line;
+    opacity: 0.94;
+    text-shadow: 0 1px 8px rgba(255,255,255,0.18);
+  }
+  .quote .cursor{
+    display: inline-block;
+    margin-left: 2px;
+    animation: cursorBlink 0.8s steps(1) infinite;
+  }
+  @keyframes cursorBlink{ 50%{ opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce){
+    .cloud, .bird, .star, .orb, .loader-sun{ animation: none !important; transition-duration: 0.4s !important; }
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="loader" id="loader">
+    <div class="loader-sun"></div>
+  </div>
+
+  <div class="sky" id="sky">
+    <div class="stars" id="stars"></div>
+    <div class="orb" id="orb"></div>
+
+    <div class="cloud" id="cloud1" style="top:14%; width:120px; height:44px; animation-duration:70s;">
+      <svg viewBox="0 0 120 44" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="30" cy="28" rx="28" ry="14" fill="#fff" opacity="0.85"/>
+        <ellipse cx="58" cy="18" rx="26" ry="18" fill="#fff" opacity="0.85"/>
+        <ellipse cx="88" cy="26" rx="24" ry="13" fill="#fff" opacity="0.85"/>
+      </svg>
+    </div>
+    <div class="cloud" id="cloud2" style="top:24%; width:90px; height:34px; animation-duration:95s; animation-delay:-30s;">
+      <svg viewBox="0 0 120 44" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="30" cy="28" rx="28" ry="14" fill="#fff" opacity="0.7"/>
+        <ellipse cx="58" cy="18" rx="26" ry="18" fill="#fff" opacity="0.7"/>
+        <ellipse cx="88" cy="26" rx="24" ry="13" fill="#fff" opacity="0.7"/>
+      </svg>
+    </div>
+    <div class="cloud" id="cloud3" style="top:9%; width:70px; height:26px; animation-duration:60s; animation-delay:-15s;">
+      <svg viewBox="0 0 120 44" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="30" cy="28" rx="28" ry="14" fill="#fff" opacity="0.6"/>
+        <ellipse cx="58" cy="18" rx="26" ry="18" fill="#fff" opacity="0.6"/>
+        <ellipse cx="88" cy="26" rx="24" ry="13" fill="#fff" opacity="0.6"/>
+      </svg>
+    </div>
+
+    <div class="bird" id="bird1" style="top:20%; animation-duration:22s;">
+      <svg viewBox="0 0 24 12" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 6 Q6 0 12 6 Q18 0 24 6" stroke="#3a3547" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="bird" id="bird2" style="top:28%; animation-duration:26s; animation-delay:-8s;">
+      <svg viewBox="0 0 24 12" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 6 Q6 0 12 6 Q18 0 24 6" stroke="#3a3547" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="vignette"></div>
+
+  <div class="topbar">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="date" id="date">--</div>
+  </div>
+
+  <div class="stage">
+    <h1 class="greeting" id="greeting">Good Morning</h1>
+    <p class="quote" id="quote"><span id="quoteText"></span><span class="cursor" id="quoteCursor">|</span></p>
+  </div>
+
+  <div class="horizon">
+    <svg viewBox="0 0 400 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,60 Q60,30 120,55 T240,50 T400,58 L400,100 L0,100 Z" fill="#241f3a" opacity="0.55"/>
+      <path d="M0,75 Q80,50 160,72 T400,70 L400,100 L0,100 Z" fill="#1a1730" opacity="0.85"/>
+    </svg>
+  </div>
+
+
+
+<script>
+  // ---------------- TEXT CONTENT — replace / extend later ----------------
+  const quotes = [
+    "Nayi subah nayi umeed laaye, 🌅\nAaj ka din aapke liye khushiyan laaye. 🌸\nPehla din hai, bas dil se enjoy kijiye,\nMan laga ke kaam kijiye aur yunhi muskurate rahiye. ❤️\nGood Morning Madam Ji 🌷\nAaj ke pehle din ke liye All the Best ❤️✨"
+  ];
+  // -------------------------------------------------------------------
+
+  const skyStops = [
+    { h: 0,  top:'#0B1230', bottom:'#1B2A4A' },
+    { h: 5,  top:'#1B2A4A', bottom:'#4A3B6B' },
+    { h: 7,  top:'#FF9A76', bottom:'#FFD89C' },
+    { h: 10, top:'#6EC6E0', bottom:'#BFEFFF' },
+    { h: 13, top:'#4FA8D8', bottom:'#DFF6FF' },
+    { h: 16, top:'#6EC6E0', bottom:'#FFE9B3' },
+    { h: 18, top:'#FF7E5F', bottom:'#FFC98B' },
+    { h: 20, top:'#2B2153', bottom:'#6C5B7B' },
+    { h: 24, top:'#0B1230', bottom:'#1B2A4A' }
+  ];
+
+  function hexToRgb(hex){
+    const v = hex.replace('#','');
+    return [parseInt(v.substr(0,2),16), parseInt(v.substr(2,2),16), parseInt(v.substr(4,2),16)];
+  }
+  function rgbToHex(rgb){
+    return '#' + rgb.map(c => Math.round(c).toString(16).padStart(2,'0')).join('');
+  }
+  function lerpColor(a, b, t){
+    const ra = hexToRgb(a), rb = hexToRgb(b);
+    return rgbToHex(ra.map((c,i) => c + (rb[i]-c)*t));
+  }
+
+  function skyColorsForHour(hourFrac){
+    for(let i=0;i<skyStops.length-1;i++){
+      const a = skyStops[i], b = skyStops[i+1];
+      if(hourFrac >= a.h && hourFrac <= b.h){
+        const t = (hourFrac - a.h) / (b.h - a.h);
+        return { top: lerpColor(a.top, b.top, t), bottom: lerpColor(a.bottom, b.bottom, t) };
+      }
+    }
+    return { top: skyStops[0].top, bottom: skyStops[0].bottom };
+  }
+
+  function greetingForHour(h){
+    if(h >= 5 && h < 18) return "Good Morning Ji 🌞";
+    return "Good Evening Ji 🌇";
+  }
+
+  let firstRun = true;
+  function positionOrb(x, y, cls){
+    const orb = document.getElementById('orb');
+    if(firstRun){
+      // Real-clock movement alone is far too slow to notice (a full arc takes
+      // 12 hours), so the very first paint gets its own quick rise animation
+      // from below the horizon up to today's real position.
+      orb.style.transition = 'none';
+      orb.className = cls;
+      orb.style.left = x + '%';
+      orb.style.top = '118%';
+      orb.offsetHeight; // force reflow so the jump above isn't animated
+      orb.style.transition = 'top 2.6s cubic-bezier(.22,.9,.32,1), left 2.6s ease, background 3s ease, box-shadow 3s ease';
+      requestAnimationFrame(() => { orb.style.top = y + '%'; });
+      firstRun = false;
+    } else {
+      orb.style.transition = 'left 3s linear, top 3s linear, background 3s ease, box-shadow 3s ease';
+      orb.className = cls;
+      orb.style.left = x + '%';
+      orb.style.top = y + '%';
+    }
+  }
+
+  let starsBuilt = false;
+  function buildStars(){
+    const wrap = document.getElementById('stars');
+    for(let i=0;i<50;i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.left = Math.random()*100 + '%';
+      s.style.top = Math.random()*70 + '%';
+      s.style.animationDelay = (Math.random()*3) + 's';
+      wrap.appendChild(s);
+    }
+    starsBuilt = true;
+  }
+
+  function update(){
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    const hourFrac = h + m/60 + s/3600;
+
+    // clock + date
+    document.getElementById('clock').textContent =
+      String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    document.getElementById('date').textContent =
+      now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
+
+    // greeting
+    document.getElementById('greeting').textContent = greetingForHour(h);
+
+    // sky gradient
+    const colors = skyColorsForHour(hourFrac);
+    document.body.style.background = `linear-gradient(180deg, ${colors.top} 0%, ${colors.bottom} 65%)`;
+
+    // sun / moon arc
+    const isDay = h >= 6 && h < 18;
+    let t, cls;
+    if(isDay){
+      t = (hourFrac - 6) / 12;
+      cls = 'orb sun';
+    } else {
+      t = (((hourFrac - 18) + 24) % 24) / 12;
+      cls = 'orb moon';
+    }
+    t = Math.min(Math.max(t,0),1);
+    const x = 8 + t*84;
+    const y = 78 - Math.sin(Math.PI*t)*58;
+    positionOrb(x, y, cls);
+
+    // stars visibility
+    const starsEl = document.getElementById('stars');
+    if(!isDay){
+      if(!starsBuilt) buildStars();
+      starsEl.classList.add('visible');
+    } else {
+      starsEl.classList.remove('visible');
+    }
+
+    // clouds/birds dimmed at night
+    const daytimeOpacity = isDay ? 1 : 0.25;
+    ['cloud1','cloud2','cloud3','bird1','bird2'].forEach(id=>{
+      document.getElementById(id).style.opacity = daytimeOpacity;
+    });
+
+    // shayari only shows before 12 noon
+    const quoteEl = document.getElementById('quote');
+    quoteEl.style.display = (h < 12) ? '' : 'none';
+  }
+
+  let typeTimer = null;
+  function typeQuote(text){
+    const textEl = document.getElementById('quoteText');
+    const cursorEl = document.getElementById('quoteCursor');
+    clearTimeout(typeTimer);
+    textEl.textContent = '';
+    cursorEl.style.display = '';
+    const chars = Array.from(text);
+    let i = 0;
+    (function typeChar(){
+      textEl.textContent = chars.slice(0, i).join('');
+      i++;
+      if(i <= chars.length){
+        typeTimer = setTimeout(typeChar, 32);
+      } else {
+        cursorEl.style.display = 'none';
+      }
+    })();
+  }
+
+  function rotateQuote(){
+    const now = new Date();
+    if(now.getHours() >= 12) return; // don't bring it back after noon
+    const next = quotes[Math.floor(Math.random()*quotes.length)];
+    typeQuote(next);
+  }
+
+  function startExperience(){
+    update();
+    setInterval(update, 1000);
+    rotateQuote();
+    if(quotes.length > 1) setInterval(rotateQuote, 15000);
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loader').classList.add('hide');
+      startExperience();
+    }, 2200);
+  });
+
+</script>
+
+</body>
+</html>
